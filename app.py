@@ -73,10 +73,59 @@ def update_power(id):
     except ValueError as e:
         return jsonify({'errors': [str(e)]}), 400
 
+# POST /heroes
+@app.route('/heroes', methods=['POST'])
+def create_hero():
+    data = request.get_json()
+    if not data.get('name') or not data.get('super_name'):
+        return jsonify({'errors': ['Name and super_name are required']}), 400
+    hero = Hero(name=data['name'], super_name=data['super_name'])
+    db.session.add(hero)
+    db.session.commit()
+    return jsonify(hero.to_dict()), 201
+
+# DELETE /heroes/:id
+@app.route('/heroes/<int:id>', methods=['DELETE'])
+def delete_hero(id):
+    hero = Hero.query.get(id)
+    if not hero:
+        return jsonify({'error': 'Hero not found'}), 404
+    db.session.delete(hero)
+    db.session.commit()
+    return jsonify({}), 204
+
+# POST /powers
+@app.route('/powers', methods=['POST'])
+def create_power():
+    data = request.get_json()
+    if not data.get('name') or not data.get('description'):
+        return jsonify({'errors': ['Name and description are required']}), 400
+    try:
+        power = Power(name=data['name'], description=data['description'])
+        db.session.add(power)
+        db.session.commit()
+        return jsonify(power.to_dict()), 201
+    except ValueError as e:
+        return jsonify({'errors': [str(e)]}), 400
+
+# DELETE /powers/:id
+@app.route('/powers/<int:id>', methods=['DELETE'])
+def delete_power(id):
+    power = Power.query.get(id)
+    if not power:
+        return jsonify({'error': 'Power not found'}), 404
+    db.session.delete(power)
+    db.session.commit()
+    return jsonify({}), 204
+
 # POST /hero_powers
 @app.route('/hero_powers', methods=['POST'])
 def create_hero_power():
     data = request.get_json()
+    required_fields = ['strength', 'power_id', 'hero_id']
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({'errors': [f'Missing fields: {", ".join(missing_fields)}']}), 400
 
     try:
         hero_power = HeroPower(

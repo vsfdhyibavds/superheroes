@@ -23,12 +23,12 @@ with app.app_context():
     db.session.add_all(heroes)
     db.session.commit()
 
-    # Seed powers
+    # Seed powers with descriptions at least 20 characters long
     powers = [
-        Power(name="super strength", description="gives the wielder super-human strengths"),
-        Power(name="flight", description="gives the wielder the ability to fly through the skies at supersonic speed"),
-        Power(name="super human senses", description="allows the wielder to use her senses at a super-human level"),
-        Power(name="elasticity", description="can stretch the human body to extreme lengths")
+        Power(name="super strength", description="Gives the wielder super-human strength and power"),
+        Power(name="flight", description="Allows the wielder to fly through the skies at supersonic speed"),
+        Power(name="super human senses", description="Enables the wielder to use senses at a super-human level"),
+        Power(name="elasticity", description="Can stretch the human body to extreme lengths and shapes")
     ]
     db.session.add_all(powers)
     db.session.commit()
