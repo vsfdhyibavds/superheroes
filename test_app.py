@@ -21,6 +21,19 @@ def test_create_hero(client):
     assert data['name'] == 'Test Hero'
     assert data['super_name'] == 'Test Super'
 
+def test_create_hero_invalid_data(client):
+    # Missing name
+    response = client.post('/heroes', json={'super_name': 'Super'})
+    assert response.status_code == 400
+    data = response.get_json()
+    assert 'errors' in data
+
+    # Missing super_name
+    response = client.post('/heroes', json={'name': 'Name'})
+    assert response.status_code == 400
+    data = response.get_json()
+    assert 'errors' in data
+
 def test_get_heroes(client):
     client.post('/heroes', json={'name': 'Test Hero', 'super_name': 'Test Super'})
     response = client.get('/heroes')
@@ -42,11 +55,36 @@ def test_delete_hero(client):
     get_resp = client.get(f'/heroes/{hero_id}')
     assert get_resp.status_code == 404
 
+def test_delete_hero_not_found(client):
+    del_resp = client.delete('/heroes/9999')
+    assert del_resp.status_code == 404
+    data = del_resp.get_json()
+    assert 'error' in data
+
 def test_create_power(client):
     response = client.post('/powers', json={'name': 'Test Power', 'description': 'This is a test power description'})
     assert response.status_code == 201
     data = response.get_json()
     assert data['name'] == 'Test Power'
+
+def test_create_power_invalid_data(client):
+    # Missing name
+    response = client.post('/powers', json={'description': 'Valid description with enough length'})
+    assert response.status_code == 400
+    data = response.get_json()
+    assert 'errors' in data
+
+    # Missing description
+    response = client.post('/powers', json={'name': 'Name'})
+    assert response.status_code == 400
+    data = response.get_json()
+    assert 'errors' in data
+
+    # Description too short
+    response = client.post('/powers', json={'name': 'Name', 'description': 'short'})
+    assert response.status_code == 400
+    data = response.get_json()
+    assert 'errors' in data
 
 def test_update_power(client):
     post_resp = client.post('/powers', json={'name': 'Update Power', 'description': 'Initial description with enough length'})
@@ -56,6 +94,14 @@ def test_update_power(client):
     data = patch_resp.get_json()
     assert data['description'] == 'Updated description with enough length'
 
+def test_update_power_invalid_description(client):
+    post_resp = client.post('/powers', json={'name': 'Update Power', 'description': 'Initial description with enough length'})
+    power_id = post_resp.get_json()['id']
+    patch_resp = client.patch(f'/powers/{power_id}', json={'description': 'short'})
+    assert patch_resp.status_code == 400
+    data = patch_resp.get_json()
+    assert 'errors' in data
+
 def test_delete_power(client):
     post_resp = client.post('/powers', json={'name': 'Delete Power', 'description': 'Description for delete power'})
     power_id = post_resp.get_json()['id']
@@ -63,6 +109,12 @@ def test_delete_power(client):
     assert del_resp.status_code == 204
     get_resp = client.get(f'/powers/{power_id}')
     assert get_resp.status_code == 404
+
+def test_delete_power_not_found(client):
+    del_resp = client.delete('/powers/9999')
+    assert del_resp.status_code == 404
+    data = del_resp.get_json()
+    assert 'error' in data
 
 def test_create_hero_power(client):
     hero_resp = client.post('/heroes', json={'name': 'HP Hero', 'super_name': 'HP Super'})
@@ -78,6 +130,16 @@ def test_create_hero_power(client):
 
 def test_create_hero_power_missing_fields(client):
     response = client.post('/hero_powers', json={'strength': 'Strong'})
+    assert response.status_code == 400
+    data = response.get_json()
+    assert 'errors' in data
+
+def test_create_hero_power_invalid_strength(client):
+    hero_resp = client.post('/heroes', json={'name': 'HP Hero', 'super_name': 'HP Super'})
+    power_resp = client.post('/powers', json={'name': 'HP Power', 'description': 'Description for HP power'})
+    hero_id = hero_resp.get_json()['id']
+    power_id = power_resp.get_json()['id']
+    response = client.post('/hero_powers', json={'strength': 'Very Strong', 'hero_id': hero_id, 'power_id': power_id})
     assert response.status_code == 400
     data = response.get_json()
     assert 'errors' in data
